@@ -8,6 +8,8 @@ from model import Actor, Critic
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.autograd import Variable
+from torchviz import make_dot
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
 BATCH_SIZE = 128        # minibatch size
@@ -52,9 +54,10 @@ class Agent():
         # Critic Network (w/ Target Network)
         self.critic_local = Critic(state_size, action_size, random_seed, hidden_sizes_critic).to(device)
         self.critic_target = Critic(state_size, action_size, random_seed, hidden_sizes_critic).to(device)
+        #self.critic_target = Critic(state_size, action_size, random_seed, hidden_sizes_critic).to(device)
         self.critic_optimizer = optim.Adam(self.critic_local.parameters(), 
                                            lr=LR_CRITIC, weight_decay=WEIGHT_DECAY_CR)
-
+        
         # Add separate Ornstein-Uhlenbeck process for each agent
         self.noise = []
         for i in range(num_agents):
@@ -63,13 +66,30 @@ class Agent():
         # Replay memory
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed, num_agents)
 
-    def show_network(self, actor_critic="actor"):
-        if actor_critic == "actor":
-            network = self.actor_local
-        if actor_critic == "critic":
-            network = self.critic_local
+    def show_actor_local(self):
+        network = self.actor_local
         x = Variable(torch.randn(1,self.state_size))
         y = network(x)
+        return make_dot(y, params=dict(list(network.named_parameters())))
+    
+    def show_actor_target(self):
+        network = self.actor_target
+        x = Variable(torch.randn(1,self.state_size))
+        y = network(x)
+        return make_dot(y, params=dict(list(network.named_parameters())))
+    
+    def show_critic_local(self):
+        network = self.critic_local
+        x1 = Variable(torch.randn(1,self.state_size))
+        x2 = Variable(torch.randn(1,self.action_size))
+        y = network(x1,x2)
+        return make_dot(y, params=dict(list(network.named_parameters())))
+
+    def show_critic_target(self):
+        network = self.critic_target
+        x1 = Variable(torch.randn(1,self.state_size))
+        x2 = Variable(torch.randn(1,self.action_size))
+        y = network(x1,x2)
         return make_dot(y, params=dict(list(network.named_parameters())))
     
     def step(self, state, action, reward, next_state, done):
@@ -151,8 +171,6 @@ class Agent():
             tau (float): interpolation parameter 
         """
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
-            print(target_param.data)
-            print(local_param.data)
             target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
 
 class OUNoise:

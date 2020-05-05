@@ -63,10 +63,11 @@ class Critic(nn.Module):
         self.action_size = action_size
 
         self.layers = nn.ModuleList([nn.Linear(self.state_size, hidden_sizes[0])]) # first layer
-        hidden_sizes[0] += action_size                                             # input of 2. layer
+        h_sizes = hidden_sizes.copy()                                              # create copy of list!
+        h_sizes[0] += action_size                                                  # input of 2. layer
         self.layers.extend([nn.Linear(s1, s2) for s1, s2 in 
-                            zip(hidden_sizes[:-1], hidden_sizes[1:])])             # middle layers
-        self.out = nn.Linear(hidden_sizes[-1], self.action_size)                   # final layer
+                            zip(h_sizes[:-1], h_sizes[1:])])                       # middle layers
+        self.out = nn.Linear(h_sizes[-1], self.action_size)                        # final layer
         self.reset_parameters()
 
     def reset_parameters(self):
