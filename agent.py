@@ -56,6 +56,10 @@ class Agent():
         self.critic_target = Critic(state_size, action_size, random_seed, hidden_sizes_critic).to(device)
         self.critic_optimizer = optim.Adam(self.critic_local.parameters(), 
                                            lr=LR_CRITIC, weight_decay=WEIGHT_DECAY_CR)
+
+        # Initialize target networks with same weights:
+        self.soft_update(self.critic_local, self.critic_target, 1)
+        self.soft_update(self.actor_local, self.actor_target, 1)   
         
         # Add Ornstein-Uhlenbeck noise
         self.noise = OUNoise((num_agents, action_size), random_seed)
