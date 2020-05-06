@@ -11,8 +11,8 @@ import torch.optim as optim
 from torch.autograd import Variable
 from torchviz import make_dot
 
-BUFFER_SIZE = int(1e5)  # replay buffer size
-BATCH_SIZE = 128        # minibatch size
+BUFFER_SIZE = int(1e6)  # replay buffer size
+BATCH_SIZE = 1024       # minibatch size
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
 LR_ACTOR = 1e-4         # learning rate of the actor 
@@ -54,17 +54,14 @@ class Agent():
         # Critic Network (w/ Target Network)
         self.critic_local = Critic(state_size, action_size, random_seed, hidden_sizes_critic).to(device)
         self.critic_target = Critic(state_size, action_size, random_seed, hidden_sizes_critic).to(device)
-        #self.critic_target = Critic(state_size, action_size, random_seed, hidden_sizes_critic).to(device)
         self.critic_optimizer = optim.Adam(self.critic_local.parameters(), 
                                            lr=LR_CRITIC, weight_decay=WEIGHT_DECAY_CR)
         
-        # Add separate Ornstein-Uhlenbeck process for each agent
-        self.noise = []
-        for i in range(num_agents):
-            self.noise.append(OUNoise(action_size, random_seed))
+        # Add Ornstein-Uhlenbeck noise
+        self.noise = OUNoise((num_agents, action_size), random_seed)
 
         # Replay memory
-        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed, num_agents)
+        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed)
 
     def show_actor_local(self):
         network = self.actor_local
@@ -111,13 +108,11 @@ class Agent():
             action = self.actor_local(state).cpu().data.numpy()
         self.actor_local.train()
         if add_noise:
-            for i in range(self.num_agents):
-                action[i,:] += self.noise[i].sample()
+            action += self.noise.sample()
         return np.clip(action, -1, 1)
 
     def reset(self):
-        for i in range(self.num_agents):
-            self.noise[i].reset()
+        self.noise.reset()
 
     def learn(self, experiences, gamma):
         """Update policy and value parameters using given batch of experience tuples.
@@ -182,6 +177,7 @@ class OUNoise:
         self.theta = theta
         self.sigma = sigma
         self.seed = random.seed(seed)
+        self.size = size
         self.reset()
 
     def reset(self):
@@ -191,14 +187,14 @@ class OUNoise:
     def sample(self):
         """Update internal state and return it as a noise sample."""
         x = self.state
-        dx = self.theta * (self.mu - x) + self.sigma * np.array([random.random() for i in range(len(x))])
+        dx = self.theta * (self.mu - x) + self.sigma * np.random.standard_normal(self.size)
         self.state = x + dx
         return self.state
 
 class ReplayBuffer:
     """Fixed-size buffer to store experience tuples."""
 
-    def __init__(self, action_size, buffer_size, batch_size, seed, num_agents):
+    def __init__(self, action_size, buffer_size, batch_size, seed):
         """Initialize a ReplayBuffer object.
         Params
         ======
