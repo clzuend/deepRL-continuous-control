@@ -8,7 +8,7 @@ In this project, we use deep reinforcement learning (specifically variations of 
 
 ### Setup
 
-#### Download and install deepRL-navigation
+#### Download and install deepRL-continuous-control
 ```
 clone git https://github.com/clzuend/deepRL-continuous-control.git
 cd deepRL-continuous-control
@@ -30,8 +30,20 @@ pip install .
 
 Open the `Continuous_Control.ipynb` workbook to initiate the environment and train the agents.
 
-<!---
-Describe the Agent class and its usage.
--->
+The Agent class contains the DDPG agent.
+
+The number of layers (at least one) and their neurons for the actor and the critic networks can be passed in lists to the hidden_sizes_actor and hidden_sizes_critic parameters. The default is ``hidden_sizes_actor = [64,64]`` for the actor, i.e., two layers with 64 neurons each, and ``hidden_sizes_critic = [128, 64, 32]`` for the critic.
+
+```python
+agent = Agent(state_size=state_size, action_size=action_size,
+              random_seed=0, num_agents=num_agents)
+```
+
+The ``Agent`` class additionally has ``show_actor_local()`` and ``show_critic_local()`` methods to visualize the graphs of the networks:
+
+```python
+agent.show_actor_local()
+agent.show_critic_local()
+```
 
 Additional information can be found in the project report: `Report.pdf`
