@@ -4,7 +4,7 @@
 
 In this project, we use deep reinforcement learning (specifically variations of DDPG) to train an agent to control a double-jointed arm.
 
-<img src="reacher.gif" width="60%" align="top-left" alt="" title="Trained Agent" />
+<img src="trained-reacher.gif" width="60%" align="top-left" alt="" title="Trained Agent" />
 
 ### Setup
 
