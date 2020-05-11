@@ -6,6 +6,12 @@ In this project, we use deep reinforcement learning (specifically variations of 
 
 <img src="trained-reacher.gif" width="60%" align="top-left" alt="" title="Trained Agent" />
 
+There are 20 agents and each is rewarded with +0.1 for every step that the arm’s hand is in the target location. The goal is to achieve an average score of at least 30 over all agents and over 100 consecutive episodes.
+
+Each agent observes 33 variables corresponding to position, rotation, velocity, and angular velocities of the arm.
+
+The action space consists of four continuous variables for the torque at the two joints.
+
 ### Setup
 
 #### Download and install deepRL-continuous-control
